@@ -19,7 +19,7 @@ namespace TomatoBuild
         public string type;
         public string command;
         public bool dir_recursive;
-        public bool rebuild_always;
+        public bool force_rebuild;
         public string error_matcher;
 
         private Regex inputRegex;
@@ -51,7 +51,11 @@ namespace TomatoBuild
 
                 if (inputRegex.IsMatch(f))
                 {
-                    if (project.meta.FileChanged(f) || rebuild_always)
+                    string pathToFile = Path.Combine(project.output_folder, file.Replace(project.input_folder, ""));
+                    string newFile = inputRegex.Replace(pathToFile, output_file);
+
+                    // if the file has changed, or force rebuild is set or the output file does not exists it will rebuild
+                    if (project.meta.FileChanged(f) || force_rebuild || !File.Exists(newFile))
                     {
                         files.Add(f);
                     }
@@ -93,6 +97,9 @@ namespace TomatoBuild
                         string args = string.Join(' ', files);
                         variables["input_file"] = args;
                         variables["output_file"] = Path.Combine(project.output_folder, output_file);
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(project.output_folder, output_file)));
+
                         string output = Util.RunCommand(Util.Preprocess(command, variables), enviroment);
 
                         if(errorMatcher != null && errorMatcher.HasError(output))
