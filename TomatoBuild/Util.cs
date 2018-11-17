@@ -125,7 +125,7 @@ namespace TomatoBuild
             return "";
         }
 
-        public static string RunCommand(string command, Dictionary<string, string> enviroment)
+        public static string RunCommand(string command, Dictionary<string, string> enviroment, bool print = true)
         {
             Process process = new Process();
             foreach(var variable in enviroment)
@@ -141,14 +141,14 @@ namespace TomatoBuild
             string lastError = "";
             process.OutputDataReceived += (sender, data) => {
                 if (data.Data == null) return;
-                lastOut = PrintAnsiEscaped(lastOut + data.Data);
-                output += data.Data;
+                if(print) lastOut = PrintAnsiEscaped(lastOut + data.Data);
+                output += data.Data + "\n";
             };
             process.StartInfo.RedirectStandardError = true;
             process.ErrorDataReceived += (sender, data) => {
                 if (data.Data == null) return;
-                lastError = PrintAnsiEscaped(lastError + data.Data);
-                output += data.Data;
+                if (print) lastError = PrintAnsiEscaped(lastError + data.Data);
+                output += data.Data + "\n";
             };
             
             command = command.Replace("\"", "\"\"");

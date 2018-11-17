@@ -13,6 +13,7 @@ namespace TomatoBuild
 
         public bool FileChanged(string path)
         {
+            path = Path.GetFullPath(path);
             if (!lastModifyTable.ContainsKey(path))
             {
                 return true;
@@ -23,8 +24,10 @@ namespace TomatoBuild
 
         public void UpdateFileLastChange(string path)
         {
-            lastModifyTable[path] = File.GetLastWriteTime(path);
+            lastModifyTable[Path.GetFullPath(path)] = File.GetLastWriteTime(path);
         }
+
+        // TODO: JsonH looks promising to reduce some of the file size
 
         public static BuildMeta Load(Project project)
         {

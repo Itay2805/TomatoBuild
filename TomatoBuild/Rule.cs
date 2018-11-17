@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Linq;
 using TomatoBuild.ErrorMatchers;
+using TomatoBuild.RebuildTriggers;
 
 namespace TomatoBuild
 {
@@ -44,7 +45,8 @@ namespace TomatoBuild
         public bool Run(Project project)
         {
             List<string> files = new List<string>();
-            
+
+            // TODO: this foreach loop can be done in parallel
             foreach (string file in Directory.GetFiles(project.input_folder, "*", dir_recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
             {
                 string f = file.Replace("\\", "/");
@@ -61,7 +63,23 @@ namespace TomatoBuild
                     }
                     else
                     {
-                        // TODO: Check rebuild triggers
+                        foreach(var rebuildTrigger in rebuild_triggers)
+                        {
+                            string type = rebuildTrigger["type"] as string;
+                            if(RebuildTriggerManager.matchers.ContainsKey(type))
+                            {
+                                if(RebuildTriggerManager.matchers[type].ShouldRebuild(project, this, rebuildTrigger, f))
+                                {
+                                    // Rebuild trigger activated, add the fileand break (since we don't want to add it multiple times)
+                                    files.Add(f);
+                                    break;
+                                }
+                            }else
+                            {
+                                Console.WriteLine("Invalid rebuild trigger `" + type + "`");
+                                Environment.Exit(0);
+                            }
+                        }
                     }
                 }
             }
@@ -70,6 +88,7 @@ namespace TomatoBuild
             {
                 case "per_file":
                     {
+                        // TODO: this foreach loop can be done in parallel
                         foreach(string file in files)
                         {
                             string pathToFile = Path.Combine(project.output_folder, file.Replace(project.input_folder, ""));
