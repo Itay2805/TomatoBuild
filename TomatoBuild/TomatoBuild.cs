@@ -25,6 +25,7 @@ namespace TomatoBuild
                 if(project.tomatobuild == 1)
                 {
                     project.Init();
+                    project.path = Path.GetFullPath(Path.GetDirectoryName(file));
                     projects[project.project] = project;
                 }
             }

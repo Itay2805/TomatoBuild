@@ -5,6 +5,8 @@ namespace TomatoBuild
     public class Project
     {
 
+        public string path = "";
+
         public int tomatobuild;
         public string project;
         public string input_folder;

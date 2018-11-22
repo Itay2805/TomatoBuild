@@ -40,7 +40,7 @@ namespace TomatoBuild
             {
                 // preprocess command
 
-                string output = Util.RunCommand(Util.Preprocess(pre_command, variables), enviroment);
+                string output = Util.RunCommand(Util.Preprocess(pre_command, variables), enviroment, project.path);
                 // TODO: Error matching
             }
 
@@ -51,7 +51,7 @@ namespace TomatoBuild
 
             foreach (string post_command in post_commands)
             {
-                string output = Util.RunCommand(Util.Preprocess(post_command, variables), enviroment);
+                string output = Util.RunCommand(Util.Preprocess(post_command, variables), enviroment, project.path);
                 // TODO: Error matching
             }
 

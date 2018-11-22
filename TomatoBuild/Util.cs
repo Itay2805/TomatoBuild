@@ -125,7 +125,7 @@ namespace TomatoBuild
             return "";
         }
 
-        public static string RunCommand(string command, Dictionary<string, string> enviroment, bool print = true)
+        public static string RunCommand(string command, Dictionary<string, string> enviroment, string path, bool print = true)
         {
             Process process = new Process();
             foreach(var variable in enviroment)
@@ -133,6 +133,7 @@ namespace TomatoBuild
                 process.StartInfo.EnvironmentVariables[variable.Key] = variable.Value;
             }
             process.StartInfo.FileName = "bash";
+            process.StartInfo.WorkingDirectory = path;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;

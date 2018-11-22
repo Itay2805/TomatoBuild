@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Linq;
 using TomatoBuild.ErrorMatchers;
 using TomatoBuild.RebuildTriggers;
+using System.Threading.Tasks;
 
 namespace TomatoBuild
 {
@@ -46,8 +47,7 @@ namespace TomatoBuild
         {
             List<string> files = new List<string>();
 
-            // TODO: this foreach loop can be done in parallel
-            foreach (string file in Directory.GetFiles(project.input_folder, "*", dir_recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
+            Parallel.ForEach(Directory.GetFiles(project.input_folder, "*", dir_recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly), (file) =>
             {
                 string f = file.Replace("\\", "/");
 
@@ -63,18 +63,19 @@ namespace TomatoBuild
                     }
                     else
                     {
-                        foreach(var rebuildTrigger in rebuild_triggers)
+                        foreach (var rebuildTrigger in rebuild_triggers)
                         {
                             string type = rebuildTrigger["type"] as string;
-                            if(RebuildTriggerManager.matchers.ContainsKey(type))
+                            if (RebuildTriggerManager.matchers.ContainsKey(type))
                             {
-                                if(RebuildTriggerManager.matchers[type].ShouldRebuild(project, this, rebuildTrigger, f))
+                                if (RebuildTriggerManager.matchers[type].ShouldRebuild(project, this, rebuildTrigger, f))
                                 {
                                     // Rebuild trigger activated, add the fileand break (since we don't want to add it multiple times)
                                     files.Add(f);
                                     break;
                                 }
-                            }else
+                            }
+                            else
                             {
                                 Console.WriteLine("Invalid rebuild trigger `" + type + "`");
                                 Environment.Exit(0);
@@ -82,14 +83,15 @@ namespace TomatoBuild
                         }
                     }
                 }
-            }
+            });
 
-            switch(type)
+            switch (type)
             {
                 case "per_file":
                     {
-                        // TODO: this foreach loop can be done in parallel
-                        foreach(string file in files)
+                        bool error = false;
+
+                        Parallel.ForEach(files, (file) =>
                         {
                             string pathToFile = Path.Combine(project.output_folder, file.Replace(project.input_folder, ""));
                             string newFile = inputRegex.Replace(pathToFile, output_file);
@@ -99,18 +101,21 @@ namespace TomatoBuild
                             variables["input_file"] = file;
                             variables["output_file"] = newFile;
 
-                            string output = Util.RunCommand(Util.Preprocess(command, variables), enviroment);
-                            
-                            if(errorMatcher != null && errorMatcher.HasError(output))
+                            string output = Util.RunCommand(Util.Preprocess(command, variables), enviroment, project.path);
+
+                            if (errorMatcher != null && errorMatcher.HasError(output))
                             {
-                                return false;
-                            }else
+                                error = true;
+                            }
+                            else
                             {
                                 Console.WriteLine(file + " -> " + newFile);
                                 project.meta.UpdateFileLastChange(file);
                             }
-                        }
-                    } break;
+                        });
+
+                        return error;
+                    }
                 case "files_as_args":
                     {
                         string args = string.Join(' ', files);
@@ -119,7 +124,7 @@ namespace TomatoBuild
 
                         Directory.CreateDirectory(Path.GetDirectoryName(Path.Combine(project.output_folder, output_file)));
 
-                        string output = Util.RunCommand(Util.Preprocess(command, variables), enviroment);
+                        string output = Util.RunCommand(Util.Preprocess(command, variables), enviroment, project.path);
 
                         if(errorMatcher != null && errorMatcher.HasError(output))
                         {

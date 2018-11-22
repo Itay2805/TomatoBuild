@@ -14,7 +14,7 @@ namespace TomatoBuild.RebuildTriggers
         public bool ShouldRebuild(Project project, Rule rule, Dictionary<string, object> options, string file)
         {
             string flags = options["gcc_flags"] as string;
-            string output = Util.RunCommand("gcc -H -fsyntax-only " + Util.Preprocess(flags, rule.variables) + " " + file, new Dictionary<string, string>(), false);
+            string output = Util.RunCommand("gcc -H -fsyntax-only " + Util.Preprocess(flags, rule.variables) + " " + file, new Dictionary<string, string>(), project.path, false);
             string[] paths = output.Split("\n");
             foreach(string p in paths)
             {
