@@ -4,12 +4,12 @@ using System.Text;
 
 namespace TomatoBuild.ErrorMatchers
 {
-    public class GccErrorMatcher : IErrorMatcher
+    public class NasmErrorMatcher : IErrorMatcher
     {
 
         public bool HasError(string output)
         {
-            return output.Contains("compilation terminated.") || output.Contains("Fatal error:");
+            return output.Contains("error:");
         }
 
     }

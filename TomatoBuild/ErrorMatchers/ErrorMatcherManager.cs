@@ -12,6 +12,7 @@ namespace TomatoBuild.ErrorMatchers
         static ErrorMatcherManager()
         {
             matchers["gcc_error_matcher"] = new GccErrorMatcher();
+            matchers["nasm_error_matcher"] = new NasmErrorMatcher();
         }
 
     }
